@@ -1,0 +1,38 @@
+{% extends 'bingo/base.html' %}
+{% load static %}
+{% block content %}
+<div class="main">
+    <div class="grid">
+      <p data-id="1"></p>
+      <p data-id="2"></p>
+      <p data-id="3"></p>
+      <p data-id="4"></p>
+      <p data-id="5"></p>
+      <p data-id="6"></p>
+      <p data-id="7"></p>
+      <p data-id="8"></p>
+      <p data-id="9"></p>
+      <p data-id="10"></p>
+      <p data-id="11"></p>
+      <p data-id="12"></p>
+      <p data-id="13"></p>
+      <p data-id="14"></p>
+      <p data-id="15"></p>
+      <p data-id="16"></p>
+      <p data-id="17"></p>
+      <p data-id="18"></p>
+      <p data-id="19"></p>
+      <p data-id="20"></p>
+      <p data-id="21"></p>
+      <p data-id="22"></p>
+      <p data-id="23"></p>
+      <p data-id="24"></p>
+      <p data-id="25"></p>
+    </div>
+    <div id="bingodiv"></div>
+    <button class="btn" onclick="refreshPage()">Restart</button>
+  </div>
+{% endblock content %}
+{% block script %}
+<script src="{% static 'js/bingo.js' %}"></script>
+{% endblock script %}

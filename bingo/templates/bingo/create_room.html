@@ -1,0 +1,13 @@
+{% extends 'bingo/base.html' %} 
+{% load static %}
+{% block content %}
+<div class="create_room">
+ <div class="col-lg-6 col-sm-8 ">
+  <input id="room_name" type="text" class="form-control" placeholder="room name" />
+  <button id="create_room" class="my-2 btn btn-success">Create Room</button>
+ </div>
+</div>
+{% endblock content %}
+{% block script %}
+<script src="{% static 'js/create_room.js' %}"></script>
+{% endblock script %}
