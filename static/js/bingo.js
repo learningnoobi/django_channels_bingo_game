@@ -1,9 +1,9 @@
- var grid = document.querySelector(".grid");
+var grid = document.querySelector(".grid");
 
-     
-      const items = [...document.querySelector(".grid").children];
-      const bingodiv = document.querySelector("#bingodiv");
-      let keysArr = [];
+
+const items = [...document.querySelector(".grid").children];
+const bingodiv = document.querySelector("#bingodiv");
+let keysArr = [];
       window.onload = () => {
         restart();
       };
@@ -53,7 +53,11 @@
               addmearr.push(parseInt(dataid));
             }
             item.classList.add("clicked");
-            ws.send(JSON.stringify({ dataset: innernum, user: "rayon" }));
+            ws.send(JSON.stringify({
+              command:'clicked',
+               dataset: innernum,
+                user: "rayon" 
+              }));
             for (const j of bingoItems) {
               if (includesAll(addmearr, j)) {
                 const index = bingoItems.indexOf(j);

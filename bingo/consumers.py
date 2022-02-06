@@ -16,23 +16,45 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def receive_json(self, content):
-        dataid = content.get("dataset", None)
-        await self.channel_layer.group_send(
-            self.room_name,
-            {
-                "type": "websocket_info",
-                "dataid": dataid,
-                "user": content.get("user", None)
+        command = content.get("command", None)
+        
+        if command == "clicked":
+            dataid = content.get("dataset", None)
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    "type": "websocket_info",
+                    "dataid": dataid,
+                    "user": content.get("user", None)
 
-            }
-        )
+                }
+            )
+        if command == "joined":
+            info = content.get("info", None)
+            user = content.get("user", None)
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    "type": "websocket_joined",
+                    "info": info,
+                    "user":user
+                }
+            )
 
 
     async def websocket_info(self, event):
-        print('event came boi')
         await self.send_json(({
             'dataset': int(event["dataid"]),
-            'user':event["user"]
+            'user':event["user"],
+            'command':'clicked',
+          
+        }))
+    
+    async def websocket_joined(self, event):
+        await self.send_json(({
+            'command':'joined',
+            'info':event["info"],
+             'user':event["user"]
           
         }))
 

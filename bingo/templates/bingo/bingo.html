@@ -3,6 +3,7 @@
 {% block content %}
 <div class="main">
   <strong id="userdiv" class="text-white"></strong>
+  <div class="text-white" id="infodiv"></div>
     <div class="grid">
       <p data-id="1"></p>
       <p data-id="2"></p>
@@ -35,7 +36,11 @@
   </div>
 {% endblock content %}
 {% block script %}
-<script src="{% static 'js/bingo_socket.js' %}"></script>
+<script>
+
+</script>
 <script src="{% static 'js/bingo_sec.js' %}"></script>
 <script src="{% static 'js/bingo.js' %}"></script>
+<script src="{% static 'js/bingo_socket.js' %}"></script>
+
 {% endblock script %}

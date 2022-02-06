@@ -1,8 +1,17 @@
+const infodiv = document.getElementById("infodiv")
+
 const urls = "ws://127.0.0.1:8000/ws/clicked"+window.location.pathname;
 const ws = new WebSocket(urls);
 const addmearr = [];
+const loc_username = localStorage.getItem("username")
 ws.onopen = function (e) {
   console.log("connection open");
+  
+  ws.send(JSON.stringify({
+      command:'joined',
+      info:`${loc_username} just Joined `,
+      user:loc_username,
+  }))
 };
 ws.onclose = function (e) {
   console.log("closed");
@@ -12,12 +21,20 @@ ws.onerror = function (e) {
 };
 ws.onmessage = function (e) {
   const data = JSON.parse(e.data);
- // console.log(data);
-  const clickedDiv = document.querySelector(
-    `[data-innernum='${data.dataset}']`
-  );
-  addmearr.push(data.dataset)
-  console.log(addmearr)
- 
-  clickedDiv.classList.add("clicked");
+  const command = data.command
+  console.log(data)
+  if(command ==='clicked'){
+    const clickedDiv = document.querySelector(
+        `[data-innernum='${data.dataset}']`
+      );
+      addmearr.push(data.dataset)
+      clickedDiv.classList.add("clicked");
+  }
+  if(command ==='joined'){
+      if(data.user !== loc_username){
+        infodiv.innerHTML+=data.info
+      }
+   
+  }
+
 };
