@@ -15,14 +15,14 @@ body {
   height: 100vh;
   width: 100%;
 }
-.btn {
+/* .btn {
   border: none;
   border-radius: 5px;
   cursor: pointer;
   padding: 7px 13px;
   color: white;
   background-color: #bb2a56;
-}
+} */
 .grid {
   display: -ms-grid;
   display: grid;

@@ -3,8 +3,19 @@
 {% block content %}
 <div class="create_room">
  <div class="col-lg-6 col-sm-8 ">
-  <input id="room_name" type="text" class="form-control" placeholder="room name" />
-  <button id="create_room" class="my-2 btn btn-success">Create Room</button>
+     <h5 class="text-white">BINGO GAME</h5>
+  <div class="my-3">
+    <input id="username" type="text" class="form-control" autocomplete="off" placeholder="Your Name" />
+
+    <div>
+        <button id="new_room" class="my-2 btn btn-success">Create Room</button>
+        <button id="join_room" class="my-2 btn btn-primary">Join Room</button>
+    </div>
+   
+    <input id="room_name" type="text" class="d-none my-1 form-control" autocomplete="off" placeholder="Room name" />
+    <button id="create_room" class="d-none my-2 btn btn-success">Create Room</button>
+    <button id="join_room_btn" class="d-none my-2 btn btn-success">Join Room</button>
+  </div>
  </div>
 </div>
 {% endblock content %}

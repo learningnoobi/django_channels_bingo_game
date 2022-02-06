@@ -2,6 +2,7 @@
 {% load static %}
 {% block content %}
 <div class="main">
+  <strong id="userdiv" class="text-white"></strong>
     <div class="grid">
       <p data-id="1"></p>
       <p data-id="2"></p>
@@ -30,9 +31,10 @@
       <p data-id="25"></p>
     </div>
     <div id="bingodiv"></div>
-    <button class="btn" onclick="refreshPage()">Restart</button>
+    <button class="btn btn-danger" onclick="refreshPage()">Restart</button>
   </div>
 {% endblock content %}
 {% block script %}
+<script src="{% static 'js/bingo_sec.js' %}"></script>
 <script src="{% static 'js/bingo.js' %}"></script>
 {% endblock script %}
