@@ -30,7 +30,7 @@ function notForMe(data) {
 }
 
 ws.onerror = function (e) {
-  console.log("error is ", e);
+  // console.log("error is ", e);
 };
 ws.onmessage = function (e) {
   const data = JSON.parse(e.data);
@@ -43,7 +43,7 @@ ws.onmessage = function (e) {
     userTurn.textContent=currPlayer===loc_username ?"Your ":`${currPlayer}'s`
 
 
-    console.log('joined now is ',currPlayer);
+    // console.log('joined now is ',currPlayer);
     user_num.textContent = data.users_count;
     if (notForMe(data)) {
       infodiv.innerHTML += `<p style="font-size:12px;">${data.info}</p>`;
@@ -75,7 +75,7 @@ ws.onmessage = function (e) {
   }
 };
 ws.onclose = function (e) {
-  console.log("closed");
+  // console.log("closed");
 };
 
 

@@ -52,7 +52,7 @@ function fillGrid() {
       }
       else{
         alert('not your turn')
-        console.log('curr is ',currPlayer)
+        // console.log('curr is ',currPlayer)
       }
      
 
