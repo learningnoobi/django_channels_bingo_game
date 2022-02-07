@@ -6,4 +6,4 @@ if(!username){
 }
 
 const userdiv = document.getElementById("userdiv")
-userdiv.innerHTML=username;
+userdiv.textContent=username;

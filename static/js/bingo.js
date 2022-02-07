@@ -1,5 +1,4 @@
 var grid = document.querySelector(".grid");
-
 const items = [...document.querySelector(".grid").children];
 const bingodiv = document.querySelector("#bingodiv");
 let keysArr = [];
@@ -35,6 +34,8 @@ function GetRandomArray() {
   }
 }
 
+
+
 const includesAll = (arr, values) => values.every((v) => arr.includes(v));
 
 const bingoState = ["B", "I", "N", "G", "O"];
@@ -46,10 +47,19 @@ function fillGrid() {
     item.innerHTML = keysArr[ind];
     item.dataset.innernum = keysArr[ind];
     item.addEventListener("click", (e) => {
-      checkBingo(item);
+      if(currPlayer ===loc_username){
+        checkBingo(item);
+      }
+      else{
+        alert('not your turn')
+        console.log('curr is ',currPlayer)
+      }
+     
+
     });
   });
 }
+
 
 function restart() {
   GetRandomArray();
@@ -74,7 +84,7 @@ function checkBingo(item) {
       command: "clicked",
       dataset: innernum,
       dataid: dataid,
-      user: "rayon",
+      user: loc_username,
     })
   );
   loopItemsAndCheck();
@@ -93,12 +103,12 @@ function loopItemsAndCheck() {
       bingodiv.append(span);
       bingoIndex += 1;
       if (bingoIndex === 5) {
-        Swal.fire(loc_username, "You really won boi", "success");
+        Swal.fire(loc_username, "You won the Game ", "success");
         ws.send(
           JSON.stringify({
             command: "won",
             user: loc_username,
-            info: `${loc_username} won the game`,
+            info: `${loc_username} won the Game`,
           })
         );
       }

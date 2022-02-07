@@ -1,12 +1,16 @@
 const infodiv = document.getElementById("infodiv");
-
+const user_num = document.getElementById("user_num");
+const userTurn = document.getElementById("userTurn");
 const urls = "ws://127.0.0.1:8000/ws/clicked" + window.location.pathname;
-const ws = new WebSocket(urls);
+const ws = new ReconnectingWebSocket(urls);
 const addmearr = [];
 const loc_username = localStorage.getItem("username");
-ws.onopen = function (e) {
-  console.log("connection open");
 
+let allPlayers = [];
+let total_player;
+let playerTrack = 0;
+let currPlayer;
+ws.onopen = function (e) {
   ws.send(
     JSON.stringify({
       command: "joined",
@@ -16,19 +20,39 @@ ws.onopen = function (e) {
   );
 };
 
+function notForMe(data) {
+  return data.user !== loc_username;
+}
+
 ws.onerror = function (e) {
   console.log("error is ", e);
 };
 ws.onmessage = function (e) {
   const data = JSON.parse(e.data);
   const command = data.command;
+  if (command === "joined") {
+    allPlayers = data.all_players;
+    total_player = data.users_count;
 
+    currPlayer = allPlayers[playerTrack];
+    userTurn.textContent=currPlayer===loc_username ?"Your ":`${currPlayer}'s`
+
+
+    console.log('joined now is ',currPlayer);
+    user_num.textContent = data.users_count;
+    if (notForMe(data)) {
+      infodiv.innerHTML += `<p style="font-size:12px;">${data.info}</p>`;
+    }
+  }
   if (command === "clicked") {
- 
+    checkTurn()
+   
+
     const clickedDiv = document.querySelector(
       `[data-innernum='${data.dataset}']`
     );
-    if (data.user !== loc_username) {
+
+    if (notForMe(data)) {
       const myDataSetId = parseInt(clickedDiv.dataset.id);
 
       if (!addmearr.includes(myDataSetId)) {
@@ -38,28 +62,27 @@ ws.onmessage = function (e) {
     }
     clickedDiv.classList.add("clicked");
   }
+
   if (command === "won") {
-    if (data.user !== loc_username) {
+    if (notForMe(data)) {
       Swal.fire("You Lost", data.info, "error");
     }
   }
-  if (command === "joined") {
-    if (data.user !== loc_username) {
-      infodiv.innerHTML += `<p style="font-size:12px;">${data.info}</p>`;
-    }
-    var element = document.getElementById("sidebar");
-    element.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-      inline: "nearest",
-    });
-  }
 };
 ws.onclose = function (e) {
-  ws.send(
-    JSON.stringify({
-      command: "left",
-      user: loc_username,
-    })
-  );
+  console.log("closed");
 };
+
+
+function checkTurn() {
+  if (playerTrack === total_player-1) {
+    playerTrack = 0;
+    currPlayer = allPlayers[playerTrack];
+    userTurn.textContent=currPlayer===loc_username ?"Your ":`${currPlayer}'s`
+   
+  } else {
+    playerTrack++;
+    currPlayer = allPlayers[playerTrack];
+    userTurn.textContent=currPlayer===loc_username ?"Your ":`${currPlayer}'s`
+  }
+}
