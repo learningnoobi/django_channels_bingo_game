@@ -1,5 +1,9 @@
+from django.http import JsonResponse
 from django.shortcuts import render
-from .models import BingoRoom,TrackPlayers
+from .models import BingoRoom
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 # Create your views here.
 
 def CreateRoomView(request):
@@ -7,3 +11,10 @@ def CreateRoomView(request):
 
 def bingoView(request,room_name):
     return render(request,'bingo/bingo.html')
+
+@csrf_exempt
+def roomExist(request,room_name):
+    print(room_name)
+    return JsonResponse({
+        "room_exist":BingoRoom.objects.filter(room_name=room_name).exists()
+    })

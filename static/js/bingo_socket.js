@@ -2,7 +2,7 @@ const infodiv = document.getElementById("infodiv");
 const user_num = document.getElementById("user_num");
 const userTurn = document.getElementById("userTurn");
 //for developent
-// const urls = "wss://127.0.0.1:8000/ws/clicked" + window.location.pathname;
+// const urls = "ws://127.0.0.1:8000/ws/clicked" + window.location.pathname;
 
 const urls = "wss://bingoboi.herokuapp.com/ws/clicked" + window.location.pathname;
 

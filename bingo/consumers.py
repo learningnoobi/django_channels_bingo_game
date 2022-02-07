@@ -19,7 +19,8 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
         
     @database_sync_to_async
     def create_room(self):
-        self.bingo_room,created = BingoRoom.objects.get_or_create(room_name=self.url_route)
+        
+        self.bingo_room,_ = BingoRoom.objects.get_or_create(room_name=self.url_route)
 
     async def receive_json(self, content):
         command = content.get("command", None)
