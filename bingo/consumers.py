@@ -26,11 +26,12 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
                 {
                     "type": "websocket_info",
                     "dataid": dataid,
-                    "user": content.get("user", None)
+                    "user": content.get("user", None),
+                    "datatry":content.get("dataid", None),
 
                 }
             )
-        if command == "joined":
+        if command == "joined" or command == "won":
             info = content.get("info", None)
             user = content.get("user", None)
             self.user_left =content.get("user", None)
@@ -39,7 +40,8 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
                 {
                     "type": "websocket_joined",
                     "info": info,
-                    "user":user
+                    "user":user,
+                    "command":command
                 }
             )
   
@@ -51,13 +53,14 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(({
             'dataset': int(event["dataid"]),
             'user':event["user"],
+            'dataid':int(event["datatry"]),
             'command':'clicked',
           
         }))
     
     async def websocket_joined(self, event):
         await self.send_json(({
-            'command':'joined',
+             'command':event["command"],
             'info':event["info"],
              'user':event["user"]
           

@@ -38,7 +38,7 @@
       <button class="btn btn-danger" onclick="refreshPage()">Restart</button>
      </div>
      </div>
-     <div class="side-info">
+     <div id="sidebar" class="side-info">
       <div class="text-white" id="infodiv">
         <h6>Your Sidebar</h6>
         <hr>
@@ -51,10 +51,10 @@
 {% endblock content %}
 {% block script %}
 <script>
-  window.onbeforeunload = function(event)
+  {% comment %} window.onbeforeunload = function(event)
   {
  return confirm("Do you really want to refresh?");  
-  };
+  }; {% endcomment %}
 </script>
 <script src="{% static 'js/bingo_sec.js' %}"></script>
 <script src="{% static 'js/bingo.js' %}"></script>
