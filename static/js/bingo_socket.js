@@ -13,9 +13,7 @@ ws.onopen = function (e) {
       user:loc_username,
   }))
 };
-ws.onclose = function (e) {
-  console.log("closed");
-};
+
 ws.onerror = function (e) {
   console.log("error is ", e);
 };
@@ -32,9 +30,18 @@ ws.onmessage = function (e) {
   }
   if(command ==='joined'){
       if(data.user !== loc_username){
-        infodiv.innerHTML+=data.info
+        infodiv.innerHTML+=`<p style="font-size:12px;">${data.info}</p>`
       }
    
   }
 
+};
+ws.onclose = function (e) {
+
+  ws.send(JSON.stringify(
+    {
+      command:"left",
+      user:loc_username,
+    }
+  ))
 };
