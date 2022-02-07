@@ -1,11 +1,12 @@
 const infodiv = document.getElementById("infodiv");
 const user_num = document.getElementById("user_num");
 const userTurn = document.getElementById("userTurn");
+const sidebar = document.getElementById("sidebar");
 //for developent
 // const urls = "ws://127.0.0.1:8000/ws/clicked" + window.location.pathname;
 
-const urls = "wss://bingoboi.herokuapp.com/ws/clicked" + window.location.pathname;
-
+const urls =
+  "wss://bingoboi.herokuapp.com/ws/clicked" + window.location.pathname;
 
 const ws = new ReconnectingWebSocket(urls);
 const addmearr = [];
@@ -24,7 +25,6 @@ ws.onopen = function (e) {
     })
   );
 };
-
 function notForMe(data) {
   return data.user !== loc_username;
 }
@@ -33,25 +33,34 @@ ws.onerror = function (e) {
   // console.log("error is ", e);
 };
 ws.onmessage = function (e) {
+  
   const data = JSON.parse(e.data);
   const command = data.command;
+ 
   if (command === "joined") {
+
+     
+     
     allPlayers = data.all_players;
     total_player = data.users_count;
 
     currPlayer = allPlayers[playerTrack];
-    userTurn.textContent=currPlayer===loc_username ?"Your ":`${currPlayer}'s`
+    userTurn.textContent =
+      currPlayer === loc_username ? "Your " : `${currPlayer}'s`;
 
-
-    // console.log('joined now is ',currPlayer);
     user_num.textContent = data.users_count;
     if (notForMe(data)) {
-      infodiv.innerHTML += `<p style="font-size:12px;">${data.info}</p>`;
+      infodiv.innerHTML += `
+      <div class="side-text">
+      <p style="font-size:12px;">${data.info}</p>
+      </div>
+      `;
     }
+    infodiv.scrollTop = infodiv.scrollHeight;
+
   }
   if (command === "clicked") {
-    checkTurn()
-   
+    checkTurn();
 
     const clickedDiv = document.querySelector(
       `[data-innernum='${data.dataset}']`
@@ -73,21 +82,59 @@ ws.onmessage = function (e) {
       Swal.fire("You Lost", data.info, "error");
     }
   }
+
+  if(command==="chat"){
+   
+     
+    infodiv.innerHTML += `<div class="side-text">
+    <p >${data.chat}
+    <span class="float-right"> - ${data.user}</span>
+    </p>
+  
+    </div>
+    `;
+    infodiv.scrollTop = infodiv.scrollHeight;
+
+  }
 };
 ws.onclose = function (e) {
   // console.log("closed");
 };
 
-
 function checkTurn() {
-  if (playerTrack === total_player-1) {
+  if (playerTrack === total_player - 1) {
     playerTrack = 0;
     currPlayer = allPlayers[playerTrack];
-    userTurn.textContent=currPlayer===loc_username ?"Your ":`${currPlayer}'s`
-   
+    userTurn.textContent =
+      currPlayer === loc_username ? "Your " : `${currPlayer}'s`;
   } else {
     playerTrack++;
     currPlayer = allPlayers[playerTrack];
-    userTurn.textContent=currPlayer===loc_username ?"Your ":`${currPlayer}'s`
+    userTurn.textContent =
+      currPlayer === loc_username ? "Your " : `${currPlayer}'s`;
   }
 }
+
+
+const chatInput= document.getElementById("chat-input")
+
+chatInput.addEventListener('keyup',(e)=>{
+  if(e.key===13||e.key==="Enter"){
+    if(!chatInput.value.trim()){
+      alert('cannot be blank')
+  }
+  else{
+    ws.send(JSON.stringify({
+      user:loc_username,
+      chat:chatInput.value,
+      command:'chat'
+    }))
+  }
+
+ 
+   chatInput.value=''
+   
+  
+
+  }
+})

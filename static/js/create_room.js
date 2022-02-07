@@ -11,14 +11,12 @@ username.value=localStorage.getItem('username')||''
 
 join_room.addEventListener('click',function(){
     room_name.classList.remove('d-none')
-    // new_room.classList.add('d-none')
     join_room.classList.add('d-none')
     join_room_btn.classList.remove('d-none')
 })
 new_room.addEventListener('click',function(){
     room_name.classList.remove('d-none')
     new_room.classList.add('d-none')
-    // join_room.classList.add('d-none')
     create_room.classList.remove('d-none')
 })
 function getInRoom() {

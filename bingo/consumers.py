@@ -55,6 +55,18 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
               
                 }
             )
+        if command == "chat":
+            await self.channel_layer.group_send(
+                self.room_name,
+                {
+                    "type": "websocket_chat",
+                    "chat": content.get("chat", None),
+                    "user": content.get("user", None),
+                    "command":command,
+              
+                }
+            )
+
     @database_sync_to_async
     def create_players(self,name):
         TrackPlayers.objects.get_or_create(room=self.bingo_room,username=name)
@@ -72,6 +84,13 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
             'command':'clicked',
           
         }))
+    async def websocket_chat(self, event):
+        await self.send_json(({
+                'user':event["user"],
+                'chat':event["chat"],
+                'command':event["command"],
+            
+            }))
     
     async def websocket_joined(self, event):
         await self.players_count()
