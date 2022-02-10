@@ -10,6 +10,10 @@ body {
   font-family: 'Poppins', sans-serif;
 
 }
+a{
+  text-decoration: none !important;
+  
+}
 .main {
   display: -ms-grid;
   display: grid;
@@ -87,6 +91,20 @@ body {
   border-bottom: 1px solid #5f5c85;
   margin-top: 13px;
   font-size:12px;
+}
+#onlinerooms{
+  display: flex;
+  flex-wrap: wrap;
+}
+.room-div{
+  padding:10px;
+  background-color: #262350;
+  width: fit-content;
+  margin:4px;
+  
+}
+.room-div:hover{
+  background-color: #363263;
 }
 @media only screen and (max-width: 1000px) {
   .sideme{

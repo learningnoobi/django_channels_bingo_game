@@ -5,8 +5,7 @@ const sidebar = document.getElementById("sidebar");
 //for developent
 // const urls = "ws://127.0.0.1:8000/ws/clicked" + window.location.pathname;
 
-const urls =
-  "wss://bingoboi.herokuapp.com/ws/clicked" + window.location.pathname;
+const urls ="wss://bingoboi.herokuapp.com/ws/clicked" + window.location.pathname;
 
 const ws = new ReconnectingWebSocket(urls);
 const addmearr = [];

@@ -16,9 +16,19 @@
     <button id="create_room" class="d-none my-2 btn btn-success">Create Room</button>
     <button id="join_room_btn" class="d-none my-2 btn btn-success">Join Room</button>
   </div>
+  <div class="my-3">
+    <h5>Online Rooms : </h5>
+    <div id="onlinerooms">
+      
+    </div>
+  </div>
  </div>
 </div>
 {% endblock content %}
 {% block script %}
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+/>
 <script src="{% static 'js/create_room.js' %}"></script>
 {% endblock script %}

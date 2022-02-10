@@ -19,8 +19,8 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
         
     @database_sync_to_async
     def create_room(self):
-        
         self.bingo_room,_ = BingoRoom.objects.get_or_create(room_name=self.url_route)
+            
 
     async def receive_json(self, content):
         command = content.get("command", None)
@@ -103,7 +103,6 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
         }))
 
     async def disconnect(self, close_code):
-        print(close_code)
         
         await self.channel_layer.group_send(
             self.room_name,
@@ -114,6 +113,7 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
             }
         )
         await self.delete_player()
+
         await self.channel_layer.group_discard(
             self.room_name,
             self.channel_name,
@@ -139,4 +139,58 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
 
         
   
-     
+class OnlineRoomConsumer(AsyncJsonWebsocketConsumer):
+    
+    async def connect(self):
+        await self.accept()
+        self.room_name='online_bingo_room'
+        await self.channel_layer.group_add(
+            self.room_name,
+            self.channel_name
+        )
+        await self.online_room()
+        
+        await self.channel_layer.group_send(
+            self.room_name,
+            {
+                "type": "websocket_rooms",
+                "online_rooms":self.online_rooms
+                
+            }
+        )
+    
+    @database_sync_to_async
+    def online_room(self):
+        self.online_rooms =[{"room_name":x.room_name,"room_id":f'{x.room_name}-{x.id}' }for x in  BingoRoom.objects.all()]
+    
+    async def websocket_rooms(self, event):
+        await self.send_json(({
+            'command':'online_rooms',
+             "online_rooms":self.online_rooms
+          
+        }))
+
+    async def websocket_room_added(self, event):
+        await self.send_json(({
+             'command':event["command"],
+             'room_name':event["room_name"],
+             'room_id':event["room_id"],
+        }))
+    
+    async def websocket_room_deleted(self, event):
+        await self.send_json(({
+             'command':event["command"],
+             'room_name':event["room_name"],
+             'room_id':event["room_id"],
+        }))
+        
+    
+    async def receive_json(self, content, **kwargs):
+        return await super().receive_json(content, **kwargs)
+        
+
+
+
+
+    async def disconnect(self, code):
+        return await super().disconnect(code)
