@@ -21,8 +21,8 @@ new_room.addEventListener('click',function(){
 })
 function getInRoom() {
     
-        if(!room_name.value.match(regexp)){
-            Swal.fire("Error", "Space not Allowed", "error");
+    if (!/^[a-zA-Z0-9-_]+$/.test(room_name.value)){
+            Swal.fire("Error", "Pleas use  underscore and alphanumeric only ! ", "error");
             
         }
         else{

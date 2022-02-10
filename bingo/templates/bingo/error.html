@@ -1,0 +1,19 @@
+{% extends 'bingo/base.html' %}
+{% load static %}
+    {% block content %}
+    
+    <div style="height:100vh;
+    display:grid;
+    place-items:center;">
+        <div>
+            <p style="font-size:50px;font-weight:bold;color:blueviolet;" class="text-center">ERROR</p>
+            <h3>Only Alphanumeric And Underscores Allowed </h3>
+            <div class="d-flex justify-content-center w-100">
+                <a href="{% url 'create_room' %}" class="my-3 btn btn-danger btn-sm">Go Back</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    
+    {% endblock content %}

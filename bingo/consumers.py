@@ -3,12 +3,13 @@ from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync, sync_to_async
 import json
 from .models import BingoRoom,TrackPlayers
-
+import re
 class BingoConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         
-        await self.accept()
+        
         self.url_route = self.scope['url_route']['kwargs']['room_name']
+        await self.accept()
         self.room_name = f'bingo_room_{self.url_route}'
         await self.create_room()
         self.user_left=''
