@@ -52,6 +52,7 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
                     "info": info,
                     "user":user,
                     "command":command,
+                    'bingoCount':content.get("bingoCount",'none')
                     
               
                 }
@@ -97,8 +98,9 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
         await self.players_count()
         await self.send_json(({
              'command':event["command"],
-            'info':event["info"],
+             'info':event["info"],
              'user':event["user"],
+             'bingoCount':event.get("bingoCount"),
              "users_count":self.players_count_all,
              "all_players":self.all_players_for_room
         }))

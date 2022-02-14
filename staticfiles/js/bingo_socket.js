@@ -5,9 +5,8 @@ const sidebar = document.getElementById("sidebar");
 //for developent
 // const urls = "ws://127.0.0.1:8000/ws/clicked" + window.location.pathname;
 
-const urls =
-  "wss://bingoboi.herokuapp.com/ws/clicked" + window.location.pathname;
-
+const urls ="wss://bingoboi.herokuapp.com/ws/clicked" + window.location.pathname;
+let gamestate = "ON";
 const ws = new ReconnectingWebSocket(urls);
 const addmearr = [];
 const loc_username = localStorage.getItem("username");
@@ -78,6 +77,9 @@ ws.onmessage = function (e) {
   }
 
   if (command === "won") {
+    console.log(data)
+    gamestate = 'OFF';
+
     if (notForMe(data)) {
       Swal.fire("You Lost", data.info, "error");
     }

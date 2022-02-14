@@ -46,17 +46,35 @@ function fillGrid() {
   items.forEach((item, ind) => {
     item.innerHTML = keysArr[ind];
     item.dataset.innernum = keysArr[ind];
-    item.addEventListener("click", (e) => {
+
+
+      item.addEventListener("click", (e) => {
+           if(gamestate==="ON"){
       if(currPlayer ===loc_username){
         checkBingo(item);
       }
       else{
-        alert('not your turn')
-        // console.log('curr is ',currPlayer)
-      }
-     
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Not Your Turn!',
+          toast:true,
+          position: 'top-right',
+        })
+      }}
+  else{
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Game Finished ! Please Restart To Play Again !',
 
-    });
+        })
+      }
+    })
+   
+
+
+
   });
 }
 
@@ -75,19 +93,32 @@ function refreshPage() {
 function checkBingo(item) {
   const dataid = item.dataset.id;
   const innernum = item.dataset.innernum;
-  if (!addmearr.includes(dataid)) {
-    addmearr.push(parseInt(dataid));
+  const dataint = parseInt(dataid)
+  if (!addmearr.includes(dataint)) {
+    addmearr.push(dataint);
+     item.classList.add("clicked");
+    ws.send(
+      JSON.stringify({
+        command: "clicked",
+        dataset: innernum,
+        dataid: dataid,
+        user: loc_username,
+      })
+    );
+    loopItemsAndCheck();
   }
-  item.classList.add("clicked");
-  ws.send(
-    JSON.stringify({
-      command: "clicked",
-      dataset: innernum,
-      dataid: dataid,
-      user: loc_username,
-    })
-  );
-  loopItemsAndCheck();
+  else{
+       Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Already Selected',
+        toast:true,
+        position: 'top-right',
+
+        
+      })
+  }
+ 
 }
 
 function loopItemsAndCheck() {
@@ -108,6 +139,7 @@ function loopItemsAndCheck() {
           JSON.stringify({
             command: "won",
             user: loc_username,
+            bingoCount:bingoIndex,
             info: `${loc_username} won the Game`,
           })
         );
