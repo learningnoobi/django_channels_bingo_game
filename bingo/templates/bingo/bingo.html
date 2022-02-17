@@ -11,7 +11,7 @@
      <div>
       <strong class="my-3 text-white text-center">
       
-        <p  id="userdiv"> </p>
+        <p class ="mt-3"id="userdiv"> </p>
         <span class="my-3">Total User : <span id="user_num"></span></span><br>
        <div class="d-flex justify-content-between">
         <div><span id="userTurn"></span> Turn</div>
@@ -52,7 +52,7 @@
  <div class="side-info">
   <div id="sidebar">
     <div class="text-white" id="infodiv">
-      <h6>Your Sidebar</h6>
+      <h6>Room Activity</h6>
       <hr>
     </div>
 
@@ -66,10 +66,7 @@
 {% endblock content %}
 {% block script %}
 <script>
-  {% comment %} window.onbeforeunload = function(event)
-  {
- return confirm("Do you really want to refresh?");  
-  }; {% endcomment %}
+
 </script>
 <script src="{% static 'js/bingo_sec.js' %}"></script>
 <script src="{% static 'js/bingo.js' %}"></script>

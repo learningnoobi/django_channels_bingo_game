@@ -3,7 +3,7 @@ const user_num = document.getElementById("user_num");
 const userTurn = document.getElementById("userTurn");
 const sidebar = document.getElementById("sidebar");
 const chatInput = document.getElementById("chat-input");
-let lastStep=0;
+let lastStep = 0;
 //for developent
 // const urls = "ws://127.0.0.1:8000/ws/clicked" + window.location.pathname;
 
@@ -18,6 +18,12 @@ let allPlayers = [];
 let total_player;
 let playerTrack = 0;
 let currPlayer;
+
+window.onbeforeunload = function (event) {
+ if(gamestate !== "ON") return;
+  return "Do you really want to refresh?"
+};
+
 ws.onopen = function (e) {
   ws.send(
     JSON.stringify({
@@ -52,8 +58,7 @@ ws.onmessage = function (e) {
     infodiv.scrollTop = infodiv.scrollHeight;
   }
   if (command === "clicked") {
-  
-    getLastStep(data.dataset)
+    getLastStep(data.dataset);
     checkTurn();
     const clickedDiv = document.querySelector(
       `[data-innernum='${data.dataset}']`
@@ -115,11 +120,7 @@ chatInput.addEventListener("keyup", (e) => {
   }
 });
 
-
-
-
 function getLastStep(data) {
-  const lastStepDiv = document.getElementById("lastStepDiv")
-  lastStepDiv.innerHTML=`<span>Last Step : <span class="prevStep">${data}</span></span>`;
-
+  const lastStepDiv = document.getElementById("lastStepDiv");
+  lastStepDiv.innerHTML = `<span>Last Step : <span class="prevStep">${data}</span></span>`;
 }

@@ -4,12 +4,12 @@
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
   color:white;
+  /* overflow-x: hidden; */
 }
 body {
-  /* background-color: #070520;
-  back */
   background-color: #121213;
   font-family: 'Poppins', sans-serif;
+  overflow-x: hidden;
 
 }
 a{
@@ -28,11 +28,12 @@ a{
   display: flex;
   justify-content: space-between;
 }
+
 .grid {
   display: -ms-grid;
   display: grid;
   grid-template-columns: repeat(5, auto);
-  gap: 10px;
+  gap:10px;
   margin-bottom: 5%;
 }
 
@@ -64,7 +65,6 @@ a{
 }
 .side-info{
   width: 30%;
- 
   color: white;
 
 }
@@ -129,7 +129,7 @@ a{
   background-color: #363263;
 }
 
-@media only screen and (max-width: 1000px) {
+@media screen and (max-width: 1000px) {
   .sideme{
     flex-direction: column;
   }
@@ -139,5 +139,13 @@ a{
     margin-top: 20px;
     justify-content: center;
     margin-bottom: 40px;
+  }
+}
+@media screen and (max-width: 380px) {
+  .grid{
+    gap:3px;
+  }
+  .side-info{
+    width: 100%;
   }
 }
