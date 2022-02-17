@@ -6,7 +6,9 @@
   color:white;
 }
 body {
-  background-color: #070520;
+  /* background-color: #070520;
+  back */
+  background-color: #121213;
   font-family: 'Poppins', sans-serif;
 
 }
@@ -30,27 +32,28 @@ a{
   display: -ms-grid;
   display: grid;
   grid-template-columns: repeat(5, auto);
-  /* max-width: 50rem; */
-  width: 70%;
-  gap: 0.25rem;
+  gap: 10px;
+  margin-bottom: 5%;
 }
 
-.grid p {
+.grid span {
   width: 4rem;
   cursor: pointer;
   height: 4rem;
-  background: #2c2458;
   color: white;
+  border: 2px solid #3A3A3C;
   display: -ms-grid;
   display: grid;
   place-items: center;
+  font-size: 1.3em;
+  font-weight: bolder;
 }
 #bingodiv {
   color: white;
   letter-spacing: 4px;
 }
-.grid p.clicked {
-  background: #4d69b4;
+.grid span.clicked {
+  background: #3A3A3C;
 }
 .create_room{
   width: 100%;
@@ -65,24 +68,38 @@ a{
   color: white;
 
 }
+.bingoSuccess{
+  background: #5baf5b !important;
+  border: none !important;
+}
+.bingState{
+  font-size: 30px;
+  font-weight: bolder;
+  color: #cfd2ce;
+}
 #infodiv{
   padding: 20px;
-  background-color: #2c2458;
+  background-color: #1b1b21;
   min-height: 450px;
   max-height: 450px;
   overflow-y: auto;
   scroll-behavior: smooth;
 }
 .send-msg{
- background: #3b3961;
+ background: #1b1b21;
  border: none;
  color: white;
   font-size: 13px;
+  outline: 0 !important;
 }
 .send-msg:focus{
-  background: #4e4c7a !important;
+  background: #282831 !important;
   color: white;
-  outline: none !important;
+ 
+}
+.lastStep{
+  background: #6d5baf !important;
+  border: none !important;
 }
 .send-msg::placeholder{
   color: white;

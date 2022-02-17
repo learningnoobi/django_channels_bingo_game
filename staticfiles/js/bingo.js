@@ -6,7 +6,7 @@ window.onload = () => {
   restart();
 };
 
-//all possible combination for bingo 
+//all possible combination for bingo
 const bingoItems = [
   [1, 2, 3, 4, 5],
   [6, 7, 8, 9, 10],
@@ -34,8 +34,6 @@ function GetRandomArray() {
   }
 }
 
-
-
 const includesAll = (arr, values) => values.every((v) => arr.includes(v));
 
 const bingoState = ["B", "I", "N", "G", "O"];
@@ -48,36 +46,29 @@ function fillGrid() {
     item.dataset.innernum = keysArr[ind];
 
 
-      item.addEventListener("click", (e) => {
-           if(gamestate==="ON"){
-      if(currPlayer ===loc_username){
-        checkBingo(item);
-      }
-      else{
+    item.addEventListener("click", (e) => {
+      if (gamestate === "ON") {
+        if (currPlayer === loc_username) {
+          checkBingo(item);
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Not Your Turn!",
+            toast: true,
+            position: "top-right",
+          });
+        }
+      } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: 'Not Your Turn!',
-          toast:true,
-          position: 'top-right',
-        })
-      }}
-  else{
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: 'Game Finished ! Please Restart To Play Again !',
-
-        })
+          icon: "error",
+          title: "Oops...",
+          text: "Game Finished ! Please Restart To Play Again !",
+        });
       }
-    })
-   
-
-
-
+    });
   });
 }
-
 
 function restart() {
   GetRandomArray();
@@ -89,14 +80,13 @@ function refreshPage() {
   window.location.reload();
 }
 
-
 function checkBingo(item) {
   const dataid = item.dataset.id;
   const innernum = item.dataset.innernum;
-  const dataint = parseInt(dataid)
+  const dataint = parseInt(dataid);
   if (!addmearr.includes(dataint)) {
     addmearr.push(dataint);
-     item.classList.add("clicked");
+    item.classList.add("clicked");
     ws.send(
       JSON.stringify({
         command: "clicked",
@@ -106,30 +96,33 @@ function checkBingo(item) {
       })
     );
     loopItemsAndCheck();
+  } else {
+    Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: "Already Selected",
+      toast: true,
+      position: "top-right",
+    });
   }
-  else{
-       Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
-        text: 'Already Selected',
-        toast:true,
-        position: 'top-right',
-
-        
-      })
-  }
- 
 }
 
 function loopItemsAndCheck() {
   for (const j of bingoItems) {
     if (includesAll(addmearr, j)) {
+   
+      for (let [ind,li] of j.entries()) {
+        successGrid(ind,li)
+        
+      }
+    
+
       const index = bingoItems.indexOf(j);
       if (index > -1) {
         bingoItems.splice(index, 1);
       }
-
       let span = document.createElement("span");
+      span.classList.add("bingState");
       span.append(bingoState[bingoIndex]);
       bingodiv.append(span);
       bingoIndex += 1;
@@ -139,7 +132,7 @@ function loopItemsAndCheck() {
           JSON.stringify({
             command: "won",
             user: loc_username,
-            bingoCount:bingoIndex,
+            bingoCount: bingoIndex,
             info: `${loc_username} won the Game`,
           })
         );
@@ -148,3 +141,13 @@ function loopItemsAndCheck() {
   }
 }
 
+function successGrid(ind,li) {
+  setTimeout(()=>{
+    const doneBingoDiv = document.querySelector(
+      `[data-id='${li}']`
+    );
+      doneBingoDiv.classList.remove('clicked')
+      doneBingoDiv.classList.add('bingoSuccess')
+  },ind*50)
+  
+}
