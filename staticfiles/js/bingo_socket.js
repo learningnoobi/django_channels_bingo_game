@@ -116,21 +116,10 @@ chatInput.addEventListener("keyup", (e) => {
 });
 
 
-function addMeClass(data,todo="add") {
-  const div = document.querySelector(
-    `[data-innernum='${data}']`
-  )
-  todo=== "add"?div.classList.add('lastStep'):div.classList.remove('lastStep')
-}
 
 
 function getLastStep(data) {
-  if(lastStep===0){
-    lastStep=data
-    addMeClass(data)
-  return;
-  }
-  addMeClass(lastStep,'remove')
-  lastStep=data
-  addMeClass(data)
+  const lastStepDiv = document.getElementById("lastStepDiv")
+  lastStepDiv.innerHTML=`<span>Last Step : <span class="prevStep">${data}</span></span>`;
+
 }

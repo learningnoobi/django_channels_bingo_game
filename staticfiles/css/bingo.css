@@ -92,6 +92,11 @@ a{
   font-size: 13px;
   outline: 0 !important;
 }
+.prevStep{
+  font-weight: bolder;
+  font-size: 1.3em;
+  color: #bbb8d8 !important;
+}
 .send-msg:focus{
   background: #282831 !important;
   color: white;
