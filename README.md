@@ -1,12 +1,5 @@
 # django_channels_bingo_game
-Real Time Multiplayer Bingo Game Using Django Channels and Javascript (ongoing now) 
+Real Time Multiplayer Bingo Game Using Django Channels and Javascript 
 
-Current Work :
-
-
-
-1) Real Time Multiplayer Bingo Logic
-2) Click div from another player in real time
-3) User Joined, left room 
-4) Real time win or lose 
-
+### Current Work :
+![gifcrop](https://user-images.githubusercontent.com/64244098/154535906-603859c6-f4a3-4f27-b99f-0c62123f468c.gif)
