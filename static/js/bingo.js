@@ -45,27 +45,24 @@ function fillGrid() {
     item.innerHTML = keysArr[ind];
     item.dataset.innernum = keysArr[ind];
 
-
     item.addEventListener("click", (e) => {
-      if (gamestate === "ON") {
-        if (currPlayer === loc_username) {
-          checkBingo(item);
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: "Not Your Turn!",
-            toast: true,
-            position: "top-right",
-          });
-        }
-      } else {
-        Swal.fire({
+      if (gamestate !== "ON") {
+        return Swal.fire({
           icon: "error",
           title: "Oops...",
           text: "Game Finished ! Please Restart To Play Again !",
         });
       }
+      if (currPlayer !== loc_username) {
+        return Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Not Your Turn!",
+          toast: true,
+          position: "top-right",
+        });
+      }
+      checkBingo(item);
     });
   });
 }
@@ -84,20 +81,8 @@ function checkBingo(item) {
   const dataid = item.dataset.id;
   const innernum = item.dataset.innernum;
   const dataint = parseInt(dataid);
-  if (!addmearr.includes(dataint)) {
-    addmearr.push(dataint);
-    item.classList.add("clicked");
-    ws.send(
-      JSON.stringify({
-        command: "clicked",
-        dataset: innernum,
-        dataid: dataid,
-        user: loc_username,
-      })
-    );
-    loopItemsAndCheck();
-  } else {
-    Swal.fire({
+  if (addmearr.includes(dataint)) {
+    return Swal.fire({
       icon: "error",
       title: "Oops...",
       text: "Already Selected",
@@ -105,17 +90,25 @@ function checkBingo(item) {
       position: "top-right",
     });
   }
+  addmearr.push(dataint);
+  item.classList.add("clicked");
+  ws.send(
+    JSON.stringify({
+      command: "clicked",
+      dataset: innernum,
+      dataid: dataid,
+      user: loc_username,
+    })
+  );
+  loopItemsAndCheck();
 }
 
 function loopItemsAndCheck() {
   for (const j of bingoItems) {
     if (includesAll(addmearr, j)) {
-   
-      for (let [ind,li] of j.entries()) {
-        successGrid(ind,li)
-        
+      for (let [ind, li] of j.entries()) {
+        successGrid(ind, li);
       }
-    
 
       const index = bingoItems.indexOf(j);
       if (index > -1) {
@@ -141,13 +134,10 @@ function loopItemsAndCheck() {
   }
 }
 
-function successGrid(ind,li) {
-  setTimeout(()=>{
-    const doneBingoDiv = document.querySelector(
-      `[data-id='${li}']`
-    );
-      doneBingoDiv.classList.remove('clicked')
-      doneBingoDiv.classList.add('bingoSuccess')
-  },ind*50)
-  
+function successGrid(ind, li) {
+  setTimeout(() => {
+    const doneBingoDiv = document.querySelector(`[data-id='${li}']`);
+    doneBingoDiv.classList.remove("clicked");
+    doneBingoDiv.classList.add("bingoSuccess");
+  }, ind * 50);
 }
