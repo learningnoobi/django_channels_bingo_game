@@ -1,5 +1,5 @@
-# django_channels_bingo_game
+# Django Channels Multiplayer Game
 Real Time Multiplayer Bingo Game Using Django Channels and Javascript 
 
-### Current Work :
-![gifcrop](https://user-images.githubusercontent.com/64244098/154535906-603859c6-f4a3-4f27-b99f-0c62123f468c.gif)
+### Working Demo :
+![bingonew](https://user-images.githubusercontent.com/64244098/154678098-f24b7baf-e32b-4647-b22e-53c5cafd15a4.gif)
