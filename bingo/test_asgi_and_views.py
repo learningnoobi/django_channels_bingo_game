@@ -63,3 +63,24 @@ def test_clean_username_trims_and_limits():
 def test_as_cell_accepts_only_1_to_25():
     assert as_cell("7") == 7 and as_cell(25) == 25
     assert all(as_cell(v) is None for v in (0, 26, None, "x", -1))
+
+
+def test_as_bingo_count_accepts_only_0_to_5():
+    from bingo.validators import as_bingo_count
+
+    assert as_bingo_count(5) == 5 and as_bingo_count("3") == 3 and as_bingo_count(0) == 0
+    assert all(as_bingo_count(v) == "none" for v in (6, -1, None, "x", "<b>"))
+
+
+def test_browser_code_escapes_relayed_strings_before_using_innerhtml():
+    """Guard against re-introducing DOM XSS: relayed fields must go through esc()."""
+    from pathlib import Path
+
+    static = Path(__file__).resolve().parent.parent / "static" / "js"
+    socket_js = (static / "bingo_socket.js").read_text()
+    lobby_js = (static / "create_room.js").read_text()
+    for field in ("data.info", "data.chat", "data.user"):
+        assert "${" + field + "}" not in socket_js, f"{field} is inserted unescaped"
+    for field in ("el.room_name", "data.room_name", "el.room_id", "data.room_id"):
+        assert "${" + field + "}" not in lobby_js, f"{field} is inserted unescaped"
+    assert "esc(data.chat)" in socket_js and "esc(el.room_name)" in lobby_js

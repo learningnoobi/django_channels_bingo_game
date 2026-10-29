@@ -28,3 +28,12 @@ def as_cell(value) -> int | None:
     except (TypeError, ValueError):
         return None
     return number if 1 <= number <= 25 else None
+
+
+def as_bingo_count(value) -> int | str:
+    """The client reports how many lines it has completed (0 to 5); anything else becomes 'none'."""
+    try:
+        count = int(value)
+    except (TypeError, ValueError):
+        return "none"
+    return count if 0 <= count <= 5 else "none"

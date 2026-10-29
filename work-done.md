@@ -20,7 +20,7 @@ A Django 4.0 / Channels 3 bingo game with 2022 pins, Heroku settings (`django_he
 | `bingo/urls.py`, `routing.py`, `models.py` | formatting; `TrackPlayers` had no `__str__` | Formatted; `__str__` added |
 | `bingo/apps.py` | imports signals in `ready()` | Kept with a noqa (ruff's autofix removed it once and the lobby tests caught it) |
 | `static/js/bingo_socket.js`, `static/js/create_room.js` | hardcoded `wss://bingoboi.herokuapp.com/...` with a commented-out localhost alternative | Built from `window.location` (`ws://` or `wss://`, same host as the page) |
-| `bingo/tests.py` | empty | Deleted; replaced by `test_consumers.py`, `test_online_rooms.py`, `test_asgi_and_views.py`, `conftest.py` (46 tests) |
+| `bingo/tests.py` | empty | Deleted; replaced by `test_consumers.py`, `test_online_rooms.py`, `test_asgi_and_views.py`, `conftest.py` (58 tests) |
 | `Procfile` | `worker: python manage.py runworker channel_layer` (no such channel) | Removed that line; kept `release` and `web` |
 | `.github/workflows/ci.yml`, `.env.example` | absent | New; CI runs the suite on in-memory and Redis layers |
 | `.gitignore` | had basics | Also `staticfiles/`, `db.sqlite3`, `.venv`, caches |
@@ -28,11 +28,18 @@ A Django 4.0 / Channels 3 bingo game with 2022 pins, Heroku settings (`django_he
 | `README.md` | one-line description and a GIF | Rewritten (GIF kept): features, config, scaling note, tests, structure |
 | `VERSIONS.md`, `work-done.md` | absent | New |
 
+## Follow-up: automated security review of the commit (fixed)
+An automated review of the first commit flagged two issues in `bingo/consumers.py`; both were real:
+1. **DOM XSS through the WebSocket relay (high).** The server relayed client-written `user`, `chat` and `info` strings and the browser inserted them with `innerHTML`, so one player could run script in every other player's page (this predates my changes but I had re-committed it). Fixed on both ends: `bingo_socket.js` and `create_room.js` now escape every relayed field (`esc()`, `encodeURIComponent` for links, plain-text mode for the SweetAlert message); the server no longer relays `info` (it builds "<name> just Joined" / "<name> won the Game" itself), validates `user` on chat and click messages, and coerces `bingoCount` to 0 to 5 or "none". A test fails if an unescaped `${data.info|chat|user}` returns to the JavaScript.
+2. **Room and player removal by any client (medium).** Cleanup was keyed on usernames and on "no player rows", so a client that reused another player's name and disconnected removed that player, and a client that never joined could delete a room others were still connected to (their next "joined" then failed). Fixed: each connection owns only the player row it created; `BingoRoom.connections` (new field, migration `0002_room_connections`) counts live connections and the room is deleted when the last one leaves.
+
+Remaining caveat: user names are not restricted to a character set (only length), so the safety of names depends on the client escaping them on output, which it now does.
+
 ## Test-suite finding
 Running the suite repeatedly against one real Redis made tests flaky (the cached channel layer keeps connections tied to an earlier test's event loop, and old groups linger). `bingo/conftest.py` now gives each test a fresh layer and flushes it afterwards; four repeated Redis runs and two in-memory runs all pass.
 
 ## Verification (actual runs)
-- `uv run pytest -q`: 46 passed on the in-memory layer; 46 passed on a real Redis 7 container (4 repeated runs). Container removed afterwards.
+- `uv run pytest -q`: 58 passed on the in-memory layer; 58 passed on a real Redis 7 container (3 repeated runs after the security fixes). Container removed afterwards.
 - `uv run ruff check .` and `ruff format --check .`: clean. `makemigrations --check`: no changes. `collectstatic` succeeded. `check --deploy`: only the two optional HSTS warnings.
 - Live check with `daphne`: home 200, room page 200, invalid room 400, `check_room` JSON, a two-client WebSocket round trip (join then click relayed), and a hostile `Origin` refused. Server stopped afterwards.
 - Not run: the full browser game UI, multiple server processes sharing Redis.

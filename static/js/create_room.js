@@ -69,6 +69,13 @@ const socket = new ReconnectingWebSocket(home_urls);
 
 
 
+// Room names come from the server but are still escaped before being inserted as HTML.
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[ch]);
+}
+
 socket.onmessage = function (e) {
     const data = JSON.parse(e.data)
     
@@ -78,9 +85,9 @@ socket.onmessage = function (e) {
        data.online_rooms.length >0 ?
        data.online_rooms.forEach(el => {
         onlinerooms.innerHTML += `
-       <a id="${el.room_id}" class="room-link" href="/${el.room_name}">
+       <a id="${esc(el.room_id)}" class="room-link" href="/${encodeURIComponent(el.room_name)}">
        <div class="room-div">
-       <strong>${el.room_name}</strong>
+       <strong>${esc(el.room_name)}</strong>
        </div>
        </a>
         `
@@ -95,10 +102,10 @@ socket.onmessage = function (e) {
             onlinerooms.removeChild(no_room)
         }
         onlinerooms.insertAdjacentHTML("afterbegin", `
-        <a id="${data.room_name}-${data.room_id}" 
-        class="animate__animated animate__fadeInLeft room-link" href="/${data.room_name}">
+        <a id="${esc(data.room_name)}-${esc(data.room_id)}" 
+        class="animate__animated animate__fadeInLeft room-link" href="/${encodeURIComponent(data.room_name)}">
         <div class="room-div">
-        <strong>${data.room_name}</strong>
+        <strong>${esc(data.room_name)}</strong>
         </div>
         </a>
         `);
@@ -107,7 +114,7 @@ socket.onmessage = function (e) {
        
         const del_id = data.room_name+'-'+data.room_id
         const deleted_room=document.getElementById(del_id)
-        onlinerooms.removeChild(deleted_room)
+        if (deleted_room) onlinerooms.removeChild(deleted_room)
 
     }
 }

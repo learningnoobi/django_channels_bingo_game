@@ -1,8 +1,15 @@
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.db.models import F
 
 from .models import BingoRoom, TrackPlayers
-from .validators import MAX_CHAT_LENGTH, as_cell, clean_username, is_valid_room_name
+from .validators import (
+    MAX_CHAT_LENGTH,
+    as_bingo_count,
+    as_cell,
+    clean_username,
+    is_valid_room_name,
+)
 
 INVALID_ROOM_CLOSE_CODE = 4000
 
@@ -11,7 +18,7 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.url_route = self.scope["url_route"]["kwargs"]["room_name"]
         self.bingo_room = None
-        self.user_left = ""
+        self.user_left = ""  # the name this connection registered (and therefore owns)
         if not is_valid_room_name(self.url_route):
             await self.close(code=INVALID_ROOM_CLOSE_CODE)
             return
@@ -23,6 +30,7 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def create_room(self):
         self.bingo_room, _ = BingoRoom.objects.get_or_create(room_name=self.url_route)
+        BingoRoom.objects.filter(pk=self.bingo_room.pk).update(connections=F("connections") + 1)
 
     async def receive_json(self, content, **kwargs):
         if not isinstance(content, dict) or self.bingo_room is None:
@@ -32,14 +40,15 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
         if command == "clicked":
             dataid = as_cell(content.get("dataset"))
             datatry = as_cell(content.get("dataid"))
-            if dataid is None or datatry is None:
+            user = clean_username(content.get("user"))
+            if dataid is None or datatry is None or user is None:
                 return  # ignore malformed moves instead of breaking every client in the room
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     "type": "websocket_info",
                     "dataid": dataid,
-                    "user": content.get("user"),
+                    "user": user,
                     "datatry": datatry,
                 },
             )
@@ -48,36 +57,41 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
             user = clean_username(content.get("user"))
             if user is None:
                 return
-            await self.create_players(user)
-            self.user_left = user
+            if await self.create_players(user):
+                self.user_left = user  # only the connection that created the row owns it
+            # The text shown to other players is built here, never relayed from the client.
+            info = f"{user} just Joined" if command == "joined" else f"{user} won the Game"
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     "type": "websocket_joined",
-                    "info": content.get("info"),
+                    "info": info,
                     "user": user,
                     "command": command,
-                    "bingoCount": content.get("bingoCount", "none"),
+                    "bingoCount": as_bingo_count(content.get("bingoCount")),
                 },
             )
 
         elif command == "chat":
             chat = content.get("chat")
-            if not isinstance(chat, str) or not chat.strip():
+            user = clean_username(content.get("user"))
+            if not isinstance(chat, str) or not chat.strip() or user is None:
                 return
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     "type": "websocket_chat",
                     "chat": chat[:MAX_CHAT_LENGTH],
-                    "user": content.get("user"),
+                    "user": user,
                     "command": command,
                 },
             )
 
     @database_sync_to_async
     def create_players(self, name):
-        TrackPlayers.objects.get_or_create(room=self.bingo_room, username=name)
+        """Register the player; True only if this call created the row (this connection owns it)."""
+        _, created = TrackPlayers.objects.get_or_create(room=self.bingo_room, username=name)
+        return created
 
     @database_sync_to_async
     def players_count(self):
@@ -126,13 +140,19 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def delete_player(self):
-        """Remove this player; delete the room when nobody is left (both are idempotent)."""
+        """Remove only the player row this connection created, then drop the connection count.
+
+        The room is deleted when its last live connection leaves, so one client can neither remove
+        another player (by reusing their name) nor delete a room others are still connected to.
+        """
         if self.user_left:
             TrackPlayers.objects.filter(
                 room_id=self.bingo_room.pk, username=self.user_left
             ).delete()
-        if not TrackPlayers.objects.filter(room_id=self.bingo_room.pk).exists():
-            BingoRoom.objects.filter(pk=self.bingo_room.pk).delete()
+        BingoRoom.objects.filter(pk=self.bingo_room.pk, connections__gt=0).update(
+            connections=F("connections") - 1
+        )
+        BingoRoom.objects.filter(pk=self.bingo_room.pk, connections=0).delete()
 
     async def websocket_leave(self, event):
         if await self.room_is_gone():

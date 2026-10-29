@@ -9,7 +9,7 @@ Real-time multiplayer Bingo built with Django Channels and JavaScript. (Not casi
 - Create a room or join an existing one; the lobby lists live rooms and updates as rooms open and close.
 - Moves, joins, wins and chat are relayed to everyone in the room over WebSockets.
 - Player list and head count update when people join or leave; an empty room is deleted automatically.
-- Hardened message handling: malformed moves, bad usernames, oversized chat (capped at 500 characters) and invalid room names are rejected or ignored without affecting other players.
+- Hardened message handling: malformed moves, bad usernames, oversized chat (capped at 500 characters) and invalid room names are rejected or ignored without affecting other players. Text shown to other players is built on the server and escaped in the browser; rooms are removed only when their last live connection leaves.
 - WebSocket origin is checked against `ALLOWED_HOSTS`; the client connects back to whichever host served the page (`ws://` locally, `wss://` over HTTPS).
 
 ## Stack
@@ -56,7 +56,7 @@ TEST_REDIS_URL=redis://localhost:6379 uv run pytest -q        # real Redis chann
 uv run ruff check . && uv run ruff format --check .
 ```
 
-46 tests drive real WebSocket sessions with Channels' `WebsocketCommunicator`: two-player join/click/chat flows, room isolation, malformed input, disconnect edge cases, room cleanup, the lobby's live updates, the origin check, and the HTTP views. CI runs the suite on both channel layers.
+58 tests drive real WebSocket sessions with Channels' `WebsocketCommunicator`: two-player join/click/chat flows, room isolation, malformed input, disconnect edge cases, room cleanup, the lobby's live updates, the origin check, and the HTTP views. CI runs the suite on both channel layers.
 
 ## Project structure
 
