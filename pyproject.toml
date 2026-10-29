@@ -1,0 +1,32 @@
+[project]
+name = "django-channels-bingo-game"
+version = "1.0.0"
+description = "Real-time multiplayer bingo (the paper game) built with Django Channels and JavaScript."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=5.2,<5.3",
+    "channels>=4.3",
+    "daphne>=4.2",
+    "channels-redis>=4.3",
+    "whitenoise>=6.12,<7",
+    "dj-database-url>=3.1,<4",
+    "psycopg[binary]>=3.3,<4",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-django>=4.9", "pytest-asyncio>=0.24", "ruff>=0.8"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "mainproject.settings_test"
+python_files = ["test_*.py"]
+testpaths = ["bingo"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["*/migrations", "staticfiles"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "DJ"]

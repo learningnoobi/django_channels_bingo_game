@@ -60,10 +60,10 @@ create_room.addEventListener('click',async function(){
 })
 join_room_btn.addEventListener('click',getInRoom)
 
-//for developent
-// const home_urls = "ws://127.0.0.1:8000/ws/online-rooms/" ;
+// Connect back to whichever host served this page (ws:// locally, wss:// over HTTPS).
+const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
 const onlinerooms = document.getElementById('onlinerooms')
-const home_urls ="wss://bingoboi.herokuapp.com/ws/online-rooms/" ;
+const home_urls = wsScheme + window.location.host + "/ws/online-rooms/";
 const socket = new ReconnectingWebSocket(home_urls);
 
 

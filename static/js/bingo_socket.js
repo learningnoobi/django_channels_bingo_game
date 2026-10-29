@@ -4,11 +4,9 @@ const userTurn = document.getElementById("userTurn");
 const sidebar = document.getElementById("sidebar");
 const chatInput = document.getElementById("chat-input");
 let lastStep = 0;
-//for developent
-// const urls = "ws://127.0.0.1:8000/ws/clicked" + window.location.pathname;
-
-const urls =
-  "wss://bingoboi.herokuapp.com/ws/clicked" + window.location.pathname;
+// Connect back to whichever host served this page (ws:// locally, wss:// over HTTPS).
+const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
+const urls = wsScheme + window.location.host + "/ws/clicked" + window.location.pathname;
 let gamestate = "ON";
 const ws = new ReconnectingWebSocket(urls);
 const addmearr = [];

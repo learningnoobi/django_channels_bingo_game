@@ -1,199 +1,194 @@
-from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
-from asgiref.sync import async_to_sync, sync_to_async
-import json
-from .models import BingoRoom,TrackPlayers
-import re
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
+
+from .models import BingoRoom, TrackPlayers
+from .validators import MAX_CHAT_LENGTH, as_cell, clean_username, is_valid_room_name
+
+INVALID_ROOM_CLOSE_CODE = 4000
+
+
 class BingoConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
-        
-        
-        self.url_route = self.scope['url_route']['kwargs']['room_name']
+        self.url_route = self.scope["url_route"]["kwargs"]["room_name"]
+        self.bingo_room = None
+        self.user_left = ""
+        if not is_valid_room_name(self.url_route):
+            await self.close(code=INVALID_ROOM_CLOSE_CODE)
+            return
         await self.accept()
-        self.room_name = f'bingo_room_{self.url_route}'
+        self.room_name = f"bingo_room_{self.url_route}"
         await self.create_room()
-        self.user_left=''
-        await self.channel_layer.group_add(
-            self.room_name,
-            self.channel_name
-        )
-        
+        await self.channel_layer.group_add(self.room_name, self.channel_name)
+
     @database_sync_to_async
     def create_room(self):
-        self.bingo_room,_ = BingoRoom.objects.get_or_create(room_name=self.url_route)
-            
+        self.bingo_room, _ = BingoRoom.objects.get_or_create(room_name=self.url_route)
 
-    async def receive_json(self, content):
-        command = content.get("command", None)
-        
+    async def receive_json(self, content, **kwargs):
+        if not isinstance(content, dict) or self.bingo_room is None:
+            return
+        command = content.get("command")
+
         if command == "clicked":
-            dataid = content.get("dataset", None)
+            dataid = as_cell(content.get("dataset"))
+            datatry = as_cell(content.get("dataid"))
+            if dataid is None or datatry is None:
+                return  # ignore malformed moves instead of breaking every client in the room
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     "type": "websocket_info",
                     "dataid": dataid,
-                    "user": content.get("user", None),
-                    "datatry":content.get("dataid", None),
-
-                }
+                    "user": content.get("user"),
+                    "datatry": datatry,
+                },
             )
-        if command == "joined" or command == "won":
-            info = content.get("info", None)
-            user = content.get("user", None)
 
+        elif command in ("joined", "won"):
+            user = clean_username(content.get("user"))
+            if user is None:
+                return
             await self.create_players(user)
-           
-            self.user_left =content.get("user", None)
+            self.user_left = user
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     "type": "websocket_joined",
-                    "info": info,
-                    "user":user,
-                    "command":command,
-                    'bingoCount':content.get("bingoCount",'none')
-                    
-              
-                }
+                    "info": content.get("info"),
+                    "user": user,
+                    "command": command,
+                    "bingoCount": content.get("bingoCount", "none"),
+                },
             )
-        if command == "chat":
+
+        elif command == "chat":
+            chat = content.get("chat")
+            if not isinstance(chat, str) or not chat.strip():
+                return
             await self.channel_layer.group_send(
                 self.room_name,
                 {
                     "type": "websocket_chat",
-                    "chat": content.get("chat", None),
-                    "user": content.get("user", None),
-                    "command":command,
-              
-                }
+                    "chat": chat[:MAX_CHAT_LENGTH],
+                    "user": content.get("user"),
+                    "command": command,
+                },
             )
 
     @database_sync_to_async
-    def create_players(self,name):
-        TrackPlayers.objects.get_or_create(room=self.bingo_room,username=name)
+    def create_players(self, name):
+        TrackPlayers.objects.get_or_create(room=self.bingo_room, username=name)
 
     @database_sync_to_async
     def players_count(self):
-        self.all_players_for_room = [x.username for x in self.bingo_room.trackplayers_set.all()]
-        self.players_count_all = self.bingo_room.trackplayers_set.all().count()
+        names = list(self.bingo_room.trackplayers_set.values_list("username", flat=True))
+        self.all_players_for_room = names
+        self.players_count_all = len(names)
 
     async def websocket_info(self, event):
-        await self.send_json(({
-            'dataset': int(event["dataid"]),
-            'user':event["user"],
-            'dataid':int(event["datatry"]),
-            'command':'clicked',
-          
-        }))
+        await self.send_json(
+            {
+                "dataset": int(event["dataid"]),
+                "user": event["user"],
+                "dataid": int(event["datatry"]),
+                "command": "clicked",
+            }
+        )
+
     async def websocket_chat(self, event):
-        await self.send_json(({
-                'user':event["user"],
-                'chat':event["chat"],
-                'command':event["command"],
-            
-            }))
-    
+        await self.send_json(
+            {"user": event["user"], "chat": event["chat"], "command": event["command"]}
+        )
+
     async def websocket_joined(self, event):
         await self.players_count()
-        await self.send_json(({
-             'command':event["command"],
-             'info':event["info"],
-             'user':event["user"],
-             'bingoCount':event.get("bingoCount"),
-             "users_count":self.players_count_all,
-             "all_players":self.all_players_for_room
-        }))
+        await self.send_json(
+            {
+                "command": event["command"],
+                "info": event["info"],
+                "user": event["user"],
+                "bingoCount": event.get("bingoCount"),
+                "users_count": self.players_count_all,
+                "all_players": self.all_players_for_room,
+            }
+        )
 
     async def disconnect(self, close_code):
-        
-        await self.channel_layer.group_send(
-            self.room_name,
-            {
-                "type": "websocket_leave",
-                "info":f"{self.user_left} left room",
-                
-            }
-        )
+        if self.bingo_room is None:  # rejected before joining a room
+            return
+        if self.user_left:
+            await self.channel_layer.group_send(
+                self.room_name,
+                {"type": "websocket_leave", "info": f"{self.user_left} left room"},
+            )
         await self.delete_player()
+        await self.channel_layer.group_discard(self.room_name, self.channel_name)
 
-        await self.channel_layer.group_discard(
-            self.room_name,
-            self.channel_name,
-          
-        )
-    
     @database_sync_to_async
     def delete_player(self):
-        TrackPlayers.objects.get(room=self.bingo_room,username=self.user_left).delete()
-        players_count = self.bingo_room.trackplayers_set.all().count()
-        if players_count == 0:
-            self.bingo_room.delete()
+        """Remove this player; delete the room when nobody is left (both are idempotent)."""
+        if self.user_left:
+            TrackPlayers.objects.filter(
+                room_id=self.bingo_room.pk, username=self.user_left
+            ).delete()
+        if not TrackPlayers.objects.filter(room_id=self.bingo_room.pk).exists():
+            BingoRoom.objects.filter(pk=self.bingo_room.pk).delete()
 
     async def websocket_leave(self, event):
+        if await self.room_is_gone():
+            return
         await self.players_count()
-        await self.send_json(({
-            'command':'joined',
-            'info':event["info"],
-            "users_count":self.players_count_all,
-             "all_players":self.all_players_for_room
-          
-        }))
-
-        
-  
-class OnlineRoomConsumer(AsyncJsonWebsocketConsumer):
-    
-    async def connect(self):
-        await self.accept()
-        self.room_name='online_bingo_room'
-        await self.channel_layer.group_add(
-            self.room_name,
-            self.channel_name
-        )
-        await self.online_room()
-        
-        await self.channel_layer.group_send(
-            self.room_name,
+        await self.send_json(
             {
-                "type": "websocket_rooms",
-                "online_rooms":self.online_rooms
-                
+                "command": "joined",
+                "info": event["info"],
+                "users_count": self.players_count_all,
+                "all_players": self.all_players_for_room,
             }
         )
-    
+
     @database_sync_to_async
-    def online_room(self):
-        self.online_rooms =[{"room_name":x.room_name,"room_id":f'{x.room_name}-{x.id}' }for x in  BingoRoom.objects.all()]
-    
-    async def websocket_rooms(self, event):
-        await self.send_json(({
-            'command':'online_rooms',
-             "online_rooms":self.online_rooms
-          
-        }))
-
-    async def websocket_room_added(self, event):
-        await self.send_json(({
-             'command':event["command"],
-             'room_name':event["room_name"],
-             'room_id':event["room_id"],
-        }))
-    
-    async def websocket_room_deleted(self, event):
-        await self.send_json(({
-             'command':event["command"],
-             'room_name':event["room_name"],
-             'room_id':event["room_id"],
-        }))
-        
-    
-    async def receive_json(self, content, **kwargs):
-        return await super().receive_json(content, **kwargs)
-        
+    def room_is_gone(self):
+        return not BingoRoom.objects.filter(pk=self.bingo_room.pk).exists()
 
 
+class OnlineRoomConsumer(AsyncJsonWebsocketConsumer):
+    GROUP = "online_bingo_room"
 
+    async def connect(self):
+        await self.accept()
+        await self.channel_layer.group_add(self.GROUP, self.channel_name)
+        await self.send_online_rooms()
 
     async def disconnect(self, code):
-        return await super().disconnect(code)
+        await self.channel_layer.group_discard(self.GROUP, self.channel_name)
+
+    @database_sync_to_async
+    def online_room(self):
+        return [
+            {"room_name": room.room_name, "room_id": f"{room.room_name}-{room.id}"}
+            for room in BingoRoom.objects.all()
+        ]
+
+    async def send_online_rooms(self):
+        # Only the newly connected client needs the full list; everyone else gets
+        # incremental room_added / room_deleted events.
+        await self.send_json({"command": "online_rooms", "online_rooms": await self.online_room()})
+
+    async def websocket_room_added(self, event):
+        await self.send_json(
+            {
+                "command": event["command"],
+                "room_name": event["room_name"],
+                "room_id": event["room_id"],
+            }
+        )
+
+    async def websocket_room_deleted(self, event):
+        await self.send_json(
+            {
+                "command": event["command"],
+                "room_name": event["room_name"],
+                "room_id": event["room_id"],
+            }
+        )
