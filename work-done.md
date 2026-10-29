@@ -20,7 +20,7 @@ A Django 4.0 / Channels 3 bingo game with 2022 pins, Heroku settings (`django_he
 | `bingo/urls.py`, `routing.py`, `models.py` | formatting; `TrackPlayers` had no `__str__` | Formatted; `__str__` added |
 | `bingo/apps.py` | imports signals in `ready()` | Kept with a noqa (ruff's autofix removed it once and the lobby tests caught it) |
 | `static/js/bingo_socket.js`, `static/js/create_room.js` | hardcoded `wss://bingoboi.herokuapp.com/...` with a commented-out localhost alternative | Built from `window.location` (`ws://` or `wss://`, same host as the page) |
-| `bingo/tests.py` | empty | Deleted; replaced by `test_consumers.py`, `test_online_rooms.py`, `test_asgi_and_views.py`, `conftest.py` (63 tests) |
+| `bingo/tests.py` | empty | Deleted; replaced by `test_consumers.py`, `test_online_rooms.py`, `test_asgi_and_views.py`, `conftest.py` (64 tests) |
 | `Procfile` | `worker: python manage.py runworker channel_layer` (no such channel) | Removed that line; kept `release` and `web` |
 | `.github/workflows/ci.yml`, `.env.example` | absent | New; CI runs the suite on in-memory and Redis layers |
 | `.gitignore` | had basics | Also `staticfiles/`, `db.sqlite3`, `.venv`, caches |
@@ -37,13 +37,15 @@ A second automated review of the fix flagged two more points, also fixed:
 3. **Race and drift in the room counter (medium).** `get_or_create` plus a separate increment could leave a connection attached to a room that another connection had just deleted, and `get_or_create` raises when duplicate room rows exist (the name is not unique). Now the room is looked up as the oldest match (or created), the increment is a single `UPDATE`, and if it touches no row the lookup is retried; the decrement and the conditional delete (only when the count is zero) run in one transaction. A test covers duplicate room rows.
 4. **Name squatting and impersonation (medium).** A connection could register unlimited names and chat or move as any other player. Identity is now bound to the connection on the server: a connection registers exactly one name (repeating it is harmless, other names are ignored), "won", chat and moves are accepted only after joining and are always attributed to that registered name whatever the client sends, and a room holds at most 20 players. Player rows are now keyed by connection (`TrackPlayers.channel_name`, migration `0003_player_channel_name`), so a second tab or a late disconnect after a page refresh removes only its own row, and the "left room" notice is sent only when no other connection still holds that name.
 
+A third review pass flagged a time-of-check/time-of-use gap in the 20-player cap (check, then insert). `register_player` now does both inside one transaction that first writes to the room row, which is a row lock on PostgreSQL and the write lock on SQLite, so concurrent joins to a room are serialised. I could not make a test that fails without it: Channels runs database calls on a single thread per process, so the race only exists with several server processes sharing a database, which the single-process suite cannot reproduce. The test that exists (28 simultaneous joins) is therefore a smoke test, and the suite also passes against PostgreSQL 17 (`TEST_DATABASE_URL`).
+
 Remaining caveat: user names are not restricted to a character set (only length), so the safety of names depends on the client escaping them on output, which it now does.
 
 ## Test-suite finding
 Running the suite repeatedly against one real Redis made tests flaky (the cached channel layer keeps connections tied to an earlier test's event loop, and old groups linger). `bingo/conftest.py` now gives each test a fresh layer and flushes it afterwards; four repeated Redis runs and two in-memory runs all pass.
 
 ## Verification (actual runs)
-- `uv run pytest -q`: 63 passed on the in-memory layer; 63 passed on a real Redis 7 container (6 consecutive runs after the security fixes). Container removed afterwards.
+- `uv run pytest -q`: 64 passed on the in-memory layer, on a real Redis 7 container (3 runs) and on PostgreSQL 17 (2 runs). Container removed afterwards.
 - `uv run ruff check .` and `ruff format --check .`: clean. `makemigrations --check`: no changes. `collectstatic` succeeded. `check --deploy`: only the two optional HSTS warnings.
 - Live check with `daphne`: home 200, room page 200, invalid room 400, `check_room` JSON, a two-client WebSocket round trip (join then click relayed), and a hostile `Origin` refused. Server stopped afterwards.
 - Live check after the fixes: two clients over a real `daphne` server (join text built by the server, impersonation attempt attributed to the real sender).

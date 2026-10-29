@@ -24,3 +24,6 @@ if os.environ.get("TEST_REDIS_URL"):
             "CONFIG": {"hosts": [os.environ["TEST_REDIS_URL"]]},
         }
     }
+
+if os.environ.get("TEST_DATABASE_URL"):
+    DATABASES = {"default": __import__("dj_database_url").parse(os.environ["TEST_DATABASE_URL"])}

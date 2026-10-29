@@ -53,10 +53,11 @@ Without `REDIS_URL` an in-memory channel layer is used, which only works for a s
 ```bash
 uv run pytest -q                                              # in-memory channel layer
 TEST_REDIS_URL=redis://localhost:6379 uv run pytest -q        # real Redis channel layer
+TEST_DATABASE_URL=postgresql://user:pass@localhost/db uv run pytest -q   # real PostgreSQL
 uv run ruff check . && uv run ruff format --check .
 ```
 
-63 tests drive real WebSocket sessions with Channels' `WebsocketCommunicator`: two-player join/click/chat flows, room isolation, malformed input, disconnect edge cases, room cleanup, the lobby's live updates, the origin check, and the HTTP views. CI runs the suite on both channel layers.
+64 tests drive real WebSocket sessions with Channels' `WebsocketCommunicator`: two-player join/click/chat flows, room isolation, malformed input, disconnect edge cases, room cleanup, the lobby's live updates, the origin check, and the HTTP views. CI runs the suite on both channel layers.
 
 ## Project structure
 

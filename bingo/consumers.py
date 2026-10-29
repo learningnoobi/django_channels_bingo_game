@@ -113,16 +113,23 @@ class BingoConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def register_player(self, name):
-        """Register this connection as ``name``; False if the room already has too many players."""
-        players = TrackPlayers.objects.filter(room_id=self.bingo_room.pk)
-        if (
-            not players.filter(username=name).exists()
-            and players.values("username").distinct().count() >= MAX_PLAYERS_PER_ROOM
-        ):
-            return False
-        TrackPlayers.objects.create(
-            room_id=self.bingo_room.pk, username=name, channel_name=self.channel_name
-        )
+        """Register this connection as ``name``; False if the room already has too many players.
+
+        The capacity check and the insert run in one transaction that first writes to the room
+        row. That row write is a lock (a row lock on PostgreSQL, the write lock on SQLite), so
+        concurrent joins to the same room are serialised and cannot jointly exceed the cap.
+        """
+        with transaction.atomic():
+            BingoRoom.objects.filter(pk=self.bingo_room.pk).update(connections=F("connections"))
+            players = TrackPlayers.objects.filter(room_id=self.bingo_room.pk)
+            if (
+                not players.filter(username=name).exists()
+                and players.values("username").distinct().count() >= MAX_PLAYERS_PER_ROOM
+            ):
+                return False
+            TrackPlayers.objects.create(
+                room_id=self.bingo_room.pk, username=name, channel_name=self.channel_name
+            )
         return True
 
     @database_sync_to_async

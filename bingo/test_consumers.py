@@ -259,6 +259,24 @@ async def test_room_has_a_player_cap():
     assert await room_names() == []
 
 
+async def test_simultaneous_joins_cannot_exceed_the_cap():
+    # Smoke test: Channels runs database calls on one thread per process, so a single-process test
+    # cannot reproduce the race the row lock in register_player guards against (several server
+    # processes sharing one database).
+
+    clients = []
+    for _ in range(MAX_PLAYERS_PER_ROOM + 8):
+        comm, _, _ = await connect()
+        clients.append(comm)
+    # every client tries to join at the same moment
+    await asyncio.gather(*(join(c, f"racer{i}") for i, c in enumerate(clients)))
+    await asyncio.sleep(1.0)
+    assert len(await player_names()) == MAX_PLAYERS_PER_ROOM
+    for comm in clients:
+        await comm.disconnect()
+    assert await room_names() == []
+
+
 # --- leaving and cleanup ---------------------------------------------------------------------
 
 
