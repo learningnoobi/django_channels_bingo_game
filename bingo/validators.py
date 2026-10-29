@@ -5,6 +5,7 @@ import re
 ROOM_NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,50}$")
 MAX_USERNAME_LENGTH = 50  # TrackPlayers.username
 MAX_CHAT_LENGTH = 500
+MAX_PLAYERS_PER_ROOM = 20
 
 
 def is_valid_room_name(name: str) -> bool:

@@ -17,6 +17,9 @@ class BingoRoom(models.Model):
 class TrackPlayers(models.Model):
     username = models.CharField(max_length=50)
     room = models.ForeignKey(BingoRoom, on_delete=models.CASCADE)
+    # The WebSocket connection that registered this player; a name can be held by several
+    # connections (for example a page refresh), and leaving only removes your own row.
+    channel_name = models.CharField(max_length=255, blank=True, default="")
 
     def __str__(self) -> str:
         return self.username
