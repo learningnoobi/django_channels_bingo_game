@@ -1,23 +1,21 @@
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.http import require_GET
+
 from .models import BingoRoom
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import re
-# Create your views here.
+from .validators import is_valid_room_name
+
 
 def CreateRoomView(request):
-    return render(request,'bingo/create_room.html')
+    return render(request, "bingo/create_room.html")
 
-def bingoView(request,room_name):
-    if not re.match(r'^[\w-]*$', room_name):
-        return render(request,'bingo/error.html')
-    return render(request,'bingo/bingo.html')
 
-@csrf_exempt
-def roomExist(request,room_name):
-    print(room_name)
-    
-    return JsonResponse({
-        "room_exist":BingoRoom.objects.filter(room_name=room_name).exists()
-    })
+def bingoView(request, room_name):
+    if not is_valid_room_name(room_name):
+        return render(request, "bingo/error.html", status=400)
+    return render(request, "bingo/bingo.html")
+
+
+@require_GET
+def roomExist(request, room_name):
+    return JsonResponse({"room_exist": BingoRoom.objects.filter(room_name=room_name).exists()})

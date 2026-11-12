@@ -4,11 +4,9 @@ const userTurn = document.getElementById("userTurn");
 const sidebar = document.getElementById("sidebar");
 const chatInput = document.getElementById("chat-input");
 let lastStep = 0;
-//for developent
-// const urls = "ws://127.0.0.1:8000/ws/clicked" + window.location.pathname;
-
-const urls =
-  "wss://bingoboi.herokuapp.com/ws/clicked" + window.location.pathname;
+// Connect back to whichever host served this page (ws:// locally, wss:// over HTTPS).
+const wsScheme = window.location.protocol === "https:" ? "wss://" : "ws://";
+const urls = wsScheme + window.location.host + "/ws/clicked" + window.location.pathname;
 let gamestate = "ON";
 const ws = new ReconnectingWebSocket(urls);
 const addmearr = [];
@@ -23,6 +21,14 @@ window.onbeforeunload = function (event) {
  if(gamestate !== "ON") return;
   return "Do you really want to refresh?"
 };
+
+// Everything that arrives over the socket (user names, chat, info) is untrusted: escape it
+// before putting it into HTML.
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  })[ch]);
+}
 
 ws.onopen = function (e) {
   ws.send(
@@ -51,7 +57,7 @@ ws.onmessage = function (e) {
     if (notForMe(data)) {
       infodiv.innerHTML += `
       <div class="side-text">
-      <p style="font-size:12px;">${data.info}</p>
+      <p style="font-size:12px;">${esc(data.info)}</p>
       </div>
       `;
     }
@@ -77,14 +83,14 @@ ws.onmessage = function (e) {
   if (command === "won") {
     gamestate = "OFF";
     if (notForMe(data)) {
-      Swal.fire("You Lost", data.info, "error");
+      Swal.fire({ title: "You Lost", text: data.info, icon: "error" }); // text, not HTML
     }
   }
 
   if (command === "chat") {
     infodiv.innerHTML += `<div class="side-text">
-        <p >${data.chat}
-        <span class="float-right"> - ${data.user}</span>
+        <p >${esc(data.chat)}
+        <span class="float-right"> - ${esc(data.user)}</span>
         </p>
      </div>
     `;
@@ -122,5 +128,5 @@ chatInput.addEventListener("keyup", (e) => {
 
 function getLastStep(data) {
   const lastStepDiv = document.getElementById("lastStepDiv");
-  lastStepDiv.innerHTML = `<span>Last Step : <span class="prevStep">${data}</span></span>`;
+  lastStepDiv.innerHTML = `<span>Last Step : <span class="prevStep">${esc(data)}</span></span>`;
 }

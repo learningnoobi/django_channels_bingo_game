@@ -1,1 +1,1 @@
-default_app_config = 'bingo.apps.BingoConfig'
+default_app_config = "bingo.apps.BingoConfig"
